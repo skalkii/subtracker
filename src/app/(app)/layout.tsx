@@ -16,6 +16,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Link href="/subscriptions" className="hover:underline">
               Subscriptions
             </Link>
+            <Link href="/settings" className="hover:underline">
+              Settings
+            </Link>
             <LogoutButton />
           </nav>
         </div>
