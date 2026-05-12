@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { formatCents } from "@/lib/money";
 import { formatBillingCycle, formatDate, formatRelativeDays } from "@/lib/format";
+import { SubscriptionRowActions } from "@/components/subscriptions/row-actions";
 
 export const metadata = { title: "Subscriptions — SubTracker" };
 export const dynamic = "force-dynamic";
@@ -64,16 +65,20 @@ export default async function SubscriptionsPage() {
                 <TableHead>Next renewal</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead className="w-12 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rows.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell>
-                    <div className="flex flex-col">
+                    <Link
+                      href={`/subscriptions/${s.id}`}
+                      className="flex flex-col hover:underline"
+                    >
                       <span className="font-medium">{s.name}</span>
                       <span className="text-xs text-muted-foreground">{s.vendor}</span>
-                    </div>
+                    </Link>
                   </TableCell>
                   <TableCell className="tabular-nums">
                     {formatCents(s.amountCents, s.currency)}
@@ -94,6 +99,9 @@ export default async function SubscriptionsPage() {
                   </TableCell>
                   <TableCell className="capitalize text-muted-foreground">
                     {s.category}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <SubscriptionRowActions id={s.id} name={s.name} status={s.status} />
                   </TableCell>
                 </TableRow>
               ))}

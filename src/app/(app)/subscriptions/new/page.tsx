@@ -1,8 +1,6 @@
 import Link from "next/link";
-import {
-  SubscriptionForm,
-  defaultsForCreate,
-} from "@/components/subscriptions/subscription-form";
+import { SubscriptionForm } from "@/components/subscriptions/subscription-form";
+import { defaultsForCreate } from "@/components/subscriptions/form-defaults";
 import { createSubscription } from "@/server/actions/subscriptions";
 
 export const metadata = { title: "New subscription — SubTracker" };

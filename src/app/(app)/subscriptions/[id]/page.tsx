@@ -3,10 +3,8 @@ import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { subscriptions } from "@/db/schema";
-import {
-  SubscriptionForm,
-  type SubscriptionFormDefaults,
-} from "@/components/subscriptions/subscription-form";
+import { SubscriptionForm } from "@/components/subscriptions/subscription-form";
+import type { SubscriptionFormDefaults } from "@/components/subscriptions/form-defaults";
 import {
   updateSubscription,
   type ActionResult,
