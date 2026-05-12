@@ -64,7 +64,20 @@ export const payments = pgTable("payments", {
     .default(sql`now()`),
 });
 
+/**
+ * Single-row settings table. We don't allow more than one row;
+ * the application reads/upserts id=1 only.
+ */
+export const settings = pgTable("settings", {
+  id: integer("id").primaryKey().default(1),
+  displayCurrency: text("display_currency"),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+});
+
 export type Subscription = typeof subscriptions.$inferSelect;
 export type NewSubscription = typeof subscriptions.$inferInsert;
 export type Payment = typeof payments.$inferSelect;
 export type NewPayment = typeof payments.$inferInsert;
+export type Settings = typeof settings.$inferSelect;
