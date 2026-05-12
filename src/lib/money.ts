@@ -27,6 +27,19 @@ export function formatCents(cents: number, currency: string, locale?: string): s
 }
 
 /**
+ * Plain decimal string for populating form inputs from cents (no currency symbol).
+ * E.g. 2000 -> "20.00", 1099 -> "10.99". Use for form defaults, not display.
+ */
+export function centsToDecimalString(cents: number): string {
+  if (!Number.isInteger(cents)) throw new Error("centsToDecimalString: cents must be an integer");
+  const sign = cents < 0 ? "-" : "";
+  const abs = Math.abs(cents);
+  const whole = Math.trunc(abs / 100);
+  const frac = (abs % 100).toString().padStart(2, "0");
+  return `${sign}${whole}.${frac}`;
+}
+
+/**
  * Parse a user-entered amount string into integer cents.
  * Accepts: "1999", "19.99", "1,099.00", " 1 099,99 " (loose).
  * Returns null on invalid input. Does no rounding beyond truncating fractional digits past 2.
