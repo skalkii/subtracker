@@ -24,17 +24,7 @@ import {
   type SubscriptionInput,
   type SubscriptionInputRaw,
 } from "@/lib/schemas/subscription";
-import { createSubscription } from "@/server/actions/subscriptions";
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function plusDaysIso(days: number): string {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
+import type { ActionResult } from "@/server/actions/subscriptions";
 
 const cycleLabel: Record<(typeof BILLING_CYCLES)[number], string> = {
   monthly: "Monthly",
@@ -43,25 +33,30 @@ const cycleLabel: Record<(typeof BILLING_CYCLES)[number], string> = {
   custom_days: "Every N days",
 };
 
-export function SubscriptionForm() {
+export type SubscriptionFormDefaults = SubscriptionInputRaw;
+
+type Props = {
+  defaults: SubscriptionFormDefaults;
+  submitLabel: string;
+  pendingLabel: string;
+  action: (input: SubscriptionInput) => Promise<ActionResult<{ id: string }>>;
+  /** Where to navigate on success. Defaults to /subscriptions. */
+  successPath?: string;
+};
+
+export function SubscriptionForm({
+  defaults,
+  submitLabel,
+  pendingLabel,
+  action,
+  successPath = "/subscriptions",
+}: Props) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm<SubscriptionInputRaw, unknown, SubscriptionInput>({
     resolver: zodResolver(SubscriptionInputSchema),
-    defaultValues: {
-      name: "",
-      vendor: "",
-      amount: "",
-      currency: "USD",
-      billingCycle: "monthly",
-      cycleDays: undefined,
-      nextRenewalAt: plusDaysIso(30),
-      startedAt: todayIso(),
-      status: "active",
-      category: "tools",
-      notes: "",
-    },
+    defaultValues: defaults,
   });
 
   const {
@@ -78,9 +73,9 @@ export function SubscriptionForm() {
 
   async function onSubmit(values: SubscriptionInput) {
     setServerError(null);
-    const result = await createSubscription(values);
+    const result = await action(values);
     if (result.ok) {
-      router.push("/subscriptions");
+      router.push(successPath);
       router.refresh();
       return;
     }
@@ -241,12 +236,7 @@ export function SubscriptionForm() {
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="notes">Notes</Label>
-        <Textarea
-          id="notes"
-          rows={3}
-          placeholder="Optional"
-          {...register("notes")}
-        />
+        <Textarea id="notes" rows={3} placeholder="Optional" {...register("notes")} />
         {errors.notes ? (
           <p className="text-sm text-destructive">{errors.notes.message}</p>
         ) : null}
@@ -262,14 +252,33 @@ export function SubscriptionForm() {
         <Button
           type="button"
           variant="ghost"
-          onClick={() => router.push("/subscriptions")}
+          onClick={() => router.push(successPath)}
         >
           Cancel
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving…" : "Add subscription"}
+          {isSubmitting ? pendingLabel : submitLabel}
         </Button>
       </div>
     </form>
   );
+}
+
+export function defaultsForCreate(): SubscriptionFormDefaults {
+  const today = new Date().toISOString().slice(0, 10);
+  const renewal = new Date();
+  renewal.setUTCDate(renewal.getUTCDate() + 30);
+  return {
+    name: "",
+    vendor: "",
+    amount: "",
+    currency: "USD",
+    billingCycle: "monthly",
+    cycleDays: undefined,
+    nextRenewalAt: renewal.toISOString().slice(0, 10),
+    startedAt: today,
+    status: "active",
+    category: "tools",
+    notes: "",
+  };
 }

@@ -1,5 +1,9 @@
 import Link from "next/link";
-import { SubscriptionForm } from "./subscription-form";
+import {
+  SubscriptionForm,
+  defaultsForCreate,
+} from "@/components/subscriptions/subscription-form";
+import { createSubscription } from "@/server/actions/subscriptions";
 
 export const metadata = { title: "New subscription — SubTracker" };
 
@@ -14,7 +18,12 @@ export default function NewSubscriptionPage() {
         </p>
         <h1 className="text-2xl font-semibold tracking-tight">New subscription</h1>
       </header>
-      <SubscriptionForm />
+      <SubscriptionForm
+        defaults={defaultsForCreate()}
+        submitLabel="Add subscription"
+        pendingLabel="Saving…"
+        action={createSubscription}
+      />
     </section>
   );
 }
