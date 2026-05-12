@@ -66,8 +66,8 @@ substack/
 │   │   ├── login/             ← single-password gate
 │   │   ├── api/
 │   │   │   └── auth/          ← password check + cookie set
-│   │   ├── layout.tsx
-│   │   └── middleware.ts      ← redirects to /login if no cookie
+│   │   └── layout.tsx
+│   ├── middleware.ts          ← redirects to /login if no cookie (must live at src/middleware.ts per Next)
 │   ├── components/
 │   │   ├── ui/                ← shadcn primitives
 │   │   ├── subscription-form.tsx
