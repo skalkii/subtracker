@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -101,11 +102,13 @@ export function SubscriptionForm({
     setServerError(null);
     const result = await action(values);
     if (result.ok) {
+      toast.success(`${values.name} saved`);
       router.push(successPath);
       router.refresh();
       return;
     }
     setServerError(result.error);
+    toast.error(result.error);
   }
 
   return (

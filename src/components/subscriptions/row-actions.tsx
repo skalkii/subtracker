@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { MoreHorizontal, Pencil, Pause, Play, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,8 +51,12 @@ export function SubscriptionRowActions({ id, name, status }: Props) {
     setError(null);
     startTransition(async () => {
       const r = await setSubscriptionStatus(id, nextStatus);
-      if (!r.ok) setError(r.error);
-      else router.refresh();
+      if (!r.ok) {
+        toast.error(`Couldn't update ${name}: ${r.error}`);
+        return;
+      }
+      toast.success(`${name} ${nextStatus === "paused" ? "paused" : "resumed"}`);
+      router.refresh();
     });
   }
 
@@ -61,10 +66,12 @@ export function SubscriptionRowActions({ id, name, status }: Props) {
       const r = await deleteSubscription(id);
       if (!r.ok) {
         setError(r.error);
-      } else {
-        setConfirmDelete(false);
-        router.refresh();
+        toast.error(`Couldn't delete ${name}: ${r.error}`);
+        return;
       }
+      setConfirmDelete(false);
+      toast.success(`${name} deleted`);
+      router.refresh();
     });
   }
 

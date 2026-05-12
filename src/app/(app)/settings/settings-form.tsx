@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -35,9 +36,11 @@ export function SettingsForm({
       });
       if (r.ok) {
         setStatus({ kind: "ok", msg: "Saved." });
+        toast.success("Settings saved");
         router.refresh();
       } else {
         setStatus({ kind: "err", msg: r.error });
+        toast.error(r.error);
       }
     });
   }
