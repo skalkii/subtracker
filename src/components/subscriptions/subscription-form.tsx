@@ -26,6 +26,7 @@ import {
 } from "@/lib/schemas/subscription";
 import type { ActionResult } from "@/server/actions/subscriptions";
 import type { SubscriptionFormDefaults } from "./form-defaults";
+import { computeNextRenewal } from "@/lib/renewals";
 
 const cycleLabel: Record<(typeof BILLING_CYCLES)[number], string> = {
   monthly: "Monthly",
@@ -69,6 +70,32 @@ export function SubscriptionForm({
   const billingCycle = watch("billingCycle");
   const currency = watch("currency");
   const status = watch("status");
+  const startedAt = watch("startedAt");
+  const cycleDaysWatch = watch("cycleDays");
+
+  function autofillNextRenewal() {
+    if (!startedAt) return;
+    const cycleDaysNum =
+      typeof cycleDaysWatch === "number"
+        ? cycleDaysWatch
+        : typeof cycleDaysWatch === "string" && cycleDaysWatch.trim() !== ""
+          ? Number(cycleDaysWatch)
+          : null;
+    if (billingCycle === "custom_days" && (!cycleDaysNum || cycleDaysNum <= 0)) return;
+    try {
+      const next = computeNextRenewal(
+        startedAt,
+        billingCycle,
+        Number.isFinite(cycleDaysNum) ? cycleDaysNum : null
+      );
+      setValue("nextRenewalAt", next.toISOString().slice(0, 10), {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    } catch {
+      // ignore; user can still type manually
+    }
+  }
 
   async function onSubmit(values: SubscriptionInput) {
     setServerError(null);
@@ -184,7 +211,16 @@ export function SubscriptionForm({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="nextRenewalAt">Next renewal</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="nextRenewalAt">Next renewal</Label>
+            <button
+              type="button"
+              onClick={autofillNextRenewal}
+              className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+            >
+              Compute from start
+            </button>
+          </div>
           <Input id="nextRenewalAt" type="date" {...register("nextRenewalAt")} />
           {errors.nextRenewalAt ? (
             <p className="text-sm text-destructive">{errors.nextRenewalAt.message}</p>
