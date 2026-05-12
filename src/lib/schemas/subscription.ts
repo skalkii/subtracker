@@ -82,4 +82,7 @@ export const SubscriptionInputSchema = z
     }
   });
 
-export type SubscriptionInput = z.infer<typeof SubscriptionInputSchema>;
+/** Output (post-transform) shape used by the server action. */
+export type SubscriptionInput = z.output<typeof SubscriptionInputSchema>;
+/** Input (raw form values) shape used by react-hook-form. */
+export type SubscriptionInputRaw = z.input<typeof SubscriptionInputSchema>;

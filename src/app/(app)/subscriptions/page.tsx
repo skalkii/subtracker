@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { asc } from "drizzle-orm";
 import { db } from "@/db/client";
 import { subscriptions } from "@/db/schema";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -39,6 +41,9 @@ export default async function SubscriptionsPage() {
             {rows.length} {rows.length === 1 ? "subscription" : "subscriptions"} tracked
           </p>
         </div>
+        <Button asChild>
+          <Link href="/subscriptions/new">Add subscription</Link>
+        </Button>
       </header>
 
       {rows.length === 0 ? (
