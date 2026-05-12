@@ -171,7 +171,7 @@ That's the entire auth system. Don't add NextAuth, Lucia, better-auth, or anythi
 ### Money
 - **Integer cents only.** No floats. Ever.
 - Display with `Intl.NumberFormat`, never with manual `toFixed(2)`.
-- Currency conversion: cache rates in-memory for 24h, source from `exchangerate.host` (free, no key). If offline, fall back to last cached rates and show a small "rates from <date>" note.
+- Currency conversion: cache rates in-memory for 24h, source from `frankfurter.dev` (free, no key, ECB daily — swapped from the original `exchangerate.host` plan because that service now requires an API key). If offline, fall back to last cached rates and show a small "rates from <date>" note.
 - Helpers live in `src/lib/money.ts`. Do not do money math inline.
 
 ### Renewal math
