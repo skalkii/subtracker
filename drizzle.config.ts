@@ -1,5 +1,9 @@
 import { defineConfig } from "drizzle-kit";
-import "dotenv/config";
+import { config as loadEnv } from "dotenv";
+
+// Mirror Next.js precedence: .env.local overrides .env
+loadEnv({ path: ".env.local" });
+loadEnv({ path: ".env" });
 
 const url = process.env.DATABASE_URL;
 if (!url) {
