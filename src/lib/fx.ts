@@ -1,17 +1,20 @@
 /**
  * FX rate fetching + caching.
  *
- * - Source: exchangerate.host (free, no key).
+ * - Source: frankfurter.app (free, no key, ECB-sourced daily rates).
+ *   exchangerate.host was the CLAUDE.md default but now requires an
+ *   API key, so we swapped — same shape (base + rates map), no key needed.
  * - Cache: in-memory, 24h TTL.
  * - Offline fallback: if fetch fails and we have a previous cached snapshot,
- *   we return it (with the original `fetchedAt`) so the UI can show "rates from <date>".
+ *   we return it (with the original `fetchedAt`) so the UI can show
+ *   "rates from <date>".
  *
  * Conversion is exposed as a pure function `convertCents` so unit tests
  * don't need network.
  */
 
 const TTL_MS = 24 * 60 * 60 * 1000;
-const ENDPOINT = "https://api.exchangerate.host/latest";
+const ENDPOINT = "https://api.frankfurter.dev/v1/latest";
 
 export type RateSnapshot = {
   /** Base currency of the rates map. */
@@ -57,12 +60,12 @@ export async function getRates(base: string): Promise<RateSnapshot> {
   }
 
   try {
-    const url = `${ENDPOINT}?base=${encodeURIComponent(key)}`;
+    const url = `${ENDPOINT}?from=${encodeURIComponent(key)}`;
     const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) throw new Error(`exchangerate.host ${res.status}`);
+    if (!res.ok) throw new Error(`frankfurter.app ${res.status}`);
     const data = (await res.json()) as { base?: string; rates?: Record<string, number> };
     if (!data.rates || typeof data.rates !== "object") {
-      throw new Error("exchangerate.host: missing rates");
+      throw new Error("frankfurter.app: missing rates");
     }
     const snapshot: RateSnapshot = {
       base: key,

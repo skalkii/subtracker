@@ -61,7 +61,7 @@ export function SettingsForm({
         </Select>
         <p className="text-xs text-muted-foreground">
           When set, the dashboard converts every subscription into this currency using
-          live FX rates from exchangerate.host (cached 24h).
+          live FX rates from frankfurter.app (ECB daily, cached 24h).
         </p>
       </div>
       {status ? (
