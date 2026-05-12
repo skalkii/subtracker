@@ -32,7 +32,7 @@ A **local-first personal tool** to track my recurring software subscriptions (Ve
 
 | Layer | Choice | Why |
 |---|---|---|
-| Framework | Next.js 15 (App Router) | Server components for the dashboard, single repo |
+| Framework | Next.js 16 (App Router) | Server components for the dashboard, single repo |
 | Language | TypeScript (strict) | Non-negotiable |
 | DB | Postgres 16 via Docker | Local, free, real SQL (not SQLite) |
 | ORM | Drizzle | Type-safe, lightweight, no codegen |
