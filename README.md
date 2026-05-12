@@ -76,41 +76,160 @@ See [docs/DECISIONS.md](./docs/DECISIONS.md) for the full reasoning trail (13 AD
 
 ---
 
-## Quick start
+## Run it on your machine
 
-Prereqs: `pnpm` (≥10), Docker, Node ≥20.
+### Prerequisites
+
+| Tool | Version | Install |
+|---|---|---|
+| Node.js | ≥ 20 | <https://nodejs.org> or `brew install node` / `nvm install 22` |
+| pnpm | ≥ 10 | `npm i -g pnpm` or `corepack enable && corepack prepare pnpm@latest --activate` |
+| Docker | Any recent | <https://www.docker.com/products/docker-desktop/> — must be running before step 3 |
+| Git | Any | Pre-installed on macOS/Linux; <https://git-scm.com/downloads> for Windows |
+
+Works on macOS, Linux, and Windows (via WSL2 recommended). All commands below are POSIX shell.
+
+### Step-by-step
 
 ```bash
-# 1. clone + install
+# 1. Clone the repo
 git clone https://github.com/skalkii/subtracker.git
 cd subtracker
+
+# 2. Install dependencies (~30s, ~600 MB in node_modules)
 pnpm install
 
-# 2. start Postgres (alpine, ~30MB)
+# 3. Start Postgres in Docker (~30 MB image, persisted to a named volume)
 docker compose up -d
 
-# 3. copy env — edit APP_PASSWORD + AUTH_SECRET before anything serious
+# 4. Create your local env file from the template
 cp .env.example .env.local
+```
 
-# 4. apply migrations
+### Configure secrets (required)
+
+Open `.env.local` and replace the two placeholders **before doing anything else**:
+
+```env
+# Pick a password you'll remember. Any non-empty string works.
+APP_PASSWORD=your-strong-password-here
+
+# Generate a real secret — must be at least 32 characters.
+AUTH_SECRET=<paste output of: openssl rand -hex 32>
+```
+
+Generate a secure `AUTH_SECRET` with one of:
+
+```bash
+# macOS / Linux
+openssl rand -hex 32
+
+# Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Python
+python3 -c "import secrets; print(secrets.token_hex(32))"
+```
+
+The app refuses to boot if `AUTH_SECRET` is shorter than 32 characters or if `APP_PASSWORD` is empty — Zod validates at startup and crashes with a clear error.
+
+### Bring up the app
+
+```bash
+# 5. Apply database migrations (creates subscriptions, payments, settings tables)
 pnpm db:migrate
 
-# 5. (optional) seed 3 example subscriptions
+# 6. (Optional) Seed 3 example subscriptions so the dashboard isn't empty
 pnpm db:seed
 
-# 6. run dev server
+# 7. Start the dev server
 pnpm dev
 ```
 
-Open <http://localhost:3000>. Default password from `.env.example` is `changeme` — **change it**.
+Open <http://localhost:3000>. You'll be redirected to `/login` — enter the `APP_PASSWORD` you set in step 4.
 
-### Generate a secure `AUTH_SECRET`
+### Verify everything works
 
 ```bash
-openssl rand -hex 32
+pnpm typecheck   # should print nothing (clean)
+pnpm test        # should print "51 passed"
+pnpm build       # should compile without errors
 ```
 
-Paste the output into `.env.local`. Must be ≥32 chars; Zod validates this at startup and crashes loudly otherwise.
+---
+
+## Make it yours
+
+After the first login, things to do:
+
+1. **Delete the example data** if you ran `db:seed` — open each row's ⋯ menu → Delete.
+2. **Add your real subscriptions** via the "Add subscription" button on `/subscriptions` or `/dashboard`.
+3. **Pick a display currency** at `/settings` if you want a single total instead of per-currency subtotals. The dashboard will start hitting `frankfurter.dev` for live FX rates (cached 24h).
+4. **Try dark mode** via the sun/moon icon in the header.
+
+To run the app long-term, you can keep it backgrounded:
+
+```bash
+# Run dev server detached, log to file
+pnpm dev > subtracker.log 2>&1 &
+
+# Later, find it and stop:
+pkill -f "next dev"
+```
+
+Or run a production build:
+
+```bash
+pnpm build
+pnpm start          # serves on :3000
+```
+
+---
+
+## Troubleshooting
+
+**`pnpm install` fails with build-script warning**
+The first install needs to approve native build scripts for `sharp` (Next image optim) and `unrs-resolver`. Both are pre-approved in `pnpm-workspace.yaml` — just rerun `pnpm install`.
+
+**Port 5432 already in use**
+Another Postgres is running on your machine. Either stop it (`brew services stop postgresql` on macOS), or edit `docker-compose.yml` and change `5432:5432` to e.g. `5433:5432`, then update `DATABASE_URL` in `.env.local` to use `:5433`.
+
+**Port 3000 already in use**
+Another dev server is running. Either stop it, or run `pnpm dev -- -p 3001`.
+
+**"Database connection failed" on first migrate**
+Postgres takes ~3 seconds to become healthy after `docker compose up -d`. Wait, then rerun `pnpm db:migrate`. Check status with `docker compose ps`.
+
+**"Invalid environment variables" at startup**
+`.env.local` is missing a required value or `AUTH_SECRET` is shorter than 32 chars. Compare against `.env.example`.
+
+**Forgot password**
+Edit `APP_PASSWORD` in `.env.local`, restart dev server. No password reset flow exists by design — single-user app.
+
+**FX rates show "rates from \<old date\>"**
+Network is offline or `frankfurter.dev` is unreachable. The dashboard falls back to the last cached snapshot. Conversion still works with stale rates.
+
+### Reset everything and start fresh
+
+```bash
+# Stop the dev server (Ctrl+C in its terminal)
+docker compose down -v       # -v deletes the Postgres volume (all data gone)
+docker compose up -d
+pnpm db:migrate
+pnpm db:seed                 # optional
+```
+
+### Back up your data
+
+The Postgres volume is named `subtracker_subtracker_pgdata`. Dump and restore:
+
+```bash
+# Backup
+docker exec subtracker-postgres pg_dump -U subtracker subtracker > backup.sql
+
+# Restore (into a fresh DB)
+docker exec -i subtracker-postgres psql -U subtracker subtracker < backup.sql
+```
 
 ---
 
